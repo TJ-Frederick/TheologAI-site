@@ -1,4 +1,3 @@
-import { Routes, Route } from 'react-router-dom';
 import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
@@ -6,7 +5,6 @@ import '@rainbow-me/rainbowkit/styles.css';
 
 import { config } from './wagmiConfig';
 import Home from './pages/theologai-homepage';
-import Donate from './pages/Donate';
 
 const queryClient = new QueryClient();
 
@@ -21,10 +19,7 @@ export default function App() {
             borderRadius: 'medium',
           })}
         >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/donate" element={<Donate />} />
-          </Routes>
+          <Home />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

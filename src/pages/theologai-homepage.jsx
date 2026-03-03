@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import DonateModal from "../components/DonateModal";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
@@ -242,6 +242,7 @@ export default function Home() {
   const [showResult, setShowResult] = useState(true);
   const [copied, setCopied] = useState(false);
   const [hoveredTool, setHoveredTool] = useState(null);
+  const [showDonate, setShowDonate] = useState(false);
 
   useEffect(() => {
     setShowResult(false);
@@ -775,6 +776,56 @@ export default function Home() {
           background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
           margin: 0 auto;
         }
+
+        /* Donate Modal */
+        .donate-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
+          animation: fadeIn 0.2s ease;
+        }
+
+        .donate-modal {
+          position: relative;
+          width: 90%;
+          max-width: 440px;
+          max-height: 90vh;
+          overflow-y: auto;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 32px;
+          animation: modalIn 0.25s ease;
+        }
+
+        @keyframes modalIn {
+          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .donate-close {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--muted);
+          font-size: 20px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .donate-close:hover { color: var(--text); border-color: var(--gold-dim); }
       `}</style>
 
       <div className="page-wrapper">
@@ -967,11 +1018,11 @@ export default function Home() {
               TheologAI is free to use. Donations help cover server costs and fund
               new features — more translations, more commentators, systematic theology search.
             </p>
-            <Link to="/donate" className="donate-btn">
-              <span style={{ fontSize: 18 }}>◈</span> Donate with USDC
-            </Link>
+            <button className="donate-btn" onClick={() => setShowDonate(true)}>
+              <span style={{ fontSize: 18 }}>◈</span> Donate Crypto
+            </button>
             <div style={{ marginTop: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)" }}>
-              Stablecoins on Base · x402 compatible
+              USDC · ETH · SBC — on Ethereum, Base &amp; Radius
             </div>
           </AnimatedIn>
         </section>
@@ -983,6 +1034,8 @@ export default function Home() {
           </div>
         </footer>
       </div>
+
+      {showDonate && <DonateModal onClose={() => setShowDonate(false)} />}
     </>
   );
 }
