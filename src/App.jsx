@@ -5,7 +5,7 @@ import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 
 import { config } from './wagmiConfig';
-import Home from './pages/Home';
+import Home from './pages/theologai-homepage';
 import Donate from './pages/Donate';
 
 const queryClient = new QueryClient();

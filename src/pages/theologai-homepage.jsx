@@ -236,7 +236,7 @@ function DemoResult({ demo }) {
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 
-export default function TheologAIHomepage() {
+export default function Home() {
   const [activeDemo, setActiveDemo] = useState(0);
   const [typing, setTyping] = useState(false);
   const [showResult, setShowResult] = useState(true);
