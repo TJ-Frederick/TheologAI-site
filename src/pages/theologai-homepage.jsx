@@ -5,12 +5,16 @@ import DonateModal from "../components/DonateModal";
 
 const TOOLS = [
   { id: "bible_lookup", name: "Bible Lookup", icon: "📖", desc: "8 translations, verse-level precision" },
-  { id: "morphology", name: "Greek/Hebrew Morphology", icon: "𝛢", desc: "Word-by-word grammatical parsing" },
-  { id: "commentary", name: "Commentary", icon: "✍", desc: "6 classic commentators" },
-  { id: "cross_refs", name: "Cross-References", icon: "🔗", desc: "Community-ranked related passages" },
-  { id: "original_lang", name: "Original Language", icon: "λ", desc: "Strong's lexicon with extended data" },
-  { id: "parallel", name: "Parallel Passages", icon: "⇄", desc: "Synoptic, quotation & thematic links" },
-  { id: "classic_texts", name: "Classic Texts", icon: "📜", desc: "Creeds, confessions, catechisms & CCEL" },
+  { id: "bible_cross_references", name: "Cross-References", icon: "🔗", desc: "Community-ranked discovery leads" },
+  { id: "parallel_passages", name: "Parallel Passages", icon: "⇄", desc: "Source-attested parallel groups" },
+  { id: "commentary_lookup", name: "Commentary", icon: "✍", desc: "6 classic commentators" },
+  { id: "classic_text_lookup", name: "Classic Texts", icon: "📜", desc: "Locally indexed creeds, confessions & catechisms" },
+  { id: "primary_source_search", name: "Primary Source Search", icon: "⌕", desc: "Bounded searches with exact local source links" },
+  { id: "original_language_lookup", name: "Strong's & Lexicons", icon: "λ", desc: "Greek and Hebrew lexical evidence" },
+  { id: "bible_verse_morphology", name: "Verse Morphology", icon: "𝛢", desc: "Word-by-word Greek and Hebrew parsing" },
+  { id: "original_language_study", name: "Original Language Study", icon: "Ω", desc: "Verse-specific token and lexical analysis" },
+  { id: "donation_config", name: "Donation Information", icon: "◈", desc: "Supported tokens, chains, and recipient details" },
+  { id: "verify_donation", name: "Verify Donation", icon: "✓", desc: "On-chain transaction receipt verification" },
 ];
 
 const TRANSLATIONS = ["ESV", "NET", "KJV", "WEB", "BSB", "ASV", "YLT", "DBY"];
@@ -110,7 +114,7 @@ const MCP_CONFIG = `{
   "mcpServers": {
     "theologai": {
       "type": "url",
-      "url": "https://theologai.tjfrederick.workers.dev/mcp"
+      "url": "https://mcp.theologai.xyz/mcp"
     }
   }
 }`;
@@ -933,10 +937,11 @@ export default function Home() {
         {/* ── TOOLS ── */}
         <section className="section" id="tools">
           <AnimatedIn>
-            <div className="section-label">7 Tools</div>
+            <div className="section-label">11 Tools · 20 Resources · 6 Prompts</div>
             <div className="section-title">The full toolkit</div>
             <div className="section-desc">
-              Each tool is an MCP endpoint that any compatible client can call.
+              Compatible MCP clients can call the tools, read exact source resources,
+              and use guided research prompts.
             </div>
           </AnimatedIn>
           <AnimatedIn delay={100}>

@@ -38,16 +38,26 @@ npm run deploy
 
 This builds the site and deploys to Cloudflare Pages via Wrangler.
 
-## Custom Domain Route Splitting
+## Custom Domains
 
-Once you have a custom domain (e.g., theologai.com) pointed at this Pages project:
+The public services use separate hostnames so Cloudflare Pages and the MCP Workers
+have unambiguous routing ownership:
 
-1. Go to Cloudflare Dashboard > Workers & Pages > your MCP Worker
-2. Add a route: `theologai.com/mcp*` > theologai-mcp-worker
-3. The Pages project handles everything else automatically
+| Address | Owner | Purpose |
+| --- | --- | --- |
+| `https://theologai.xyz` | Cloudflare Pages project `theologai` | Canonical website, donation UI, and Pages Functions |
+| `https://mcp.theologai.xyz/mcp` | Production MCP Worker | Canonical production MCP endpoint |
+| `https://preview-mcp.theologai.xyz/mcp` | Preview MCP Worker | Preview-only MCP endpoint |
 
-Routes:
-- `theologai.com/` — This Pages project (homepage)
-- `theologai.com/donate` — This Pages project (donate page)
-- `theologai.com/api/*` — Pages Functions (auto-routed from /functions dir)
-- `theologai.com/mcp` — Your existing MCP Worker
+Do not attach an `/mcp*` Worker route to the website apex. The Pages custom domain
+owns `theologai.xyz`, while each MCP Worker owns its distinct subdomain.
+
+The original Cloudflare hostnames remain compatibility aliases and rollback paths:
+
+- `https://theologai.pages.dev/` — website alias
+- `https://theologai.tjfrederick.workers.dev/mcp` — production MCP alias
+- `https://theologai-preview.tjfrederick.workers.dev/mcp` — preview MCP alias
+
+If a custom-domain route has a problem, clients can temporarily switch back to the
+corresponding alias without changing the Pages project, Worker deployment, or D1
+binding. Removing an alias is a separate, explicitly approved operation.
