@@ -45,7 +45,7 @@ have unambiguous routing ownership:
 
 | Address | Owner | Purpose |
 | --- | --- | --- |
-| `https://theologai.xyz` | Cloudflare Pages project `theologai-site` | Canonical website, donation UI, and Pages Functions |
+| `https://theologai.xyz` | Cloudflare Pages project `theologai` | Canonical website, donation UI, and Pages Functions |
 | `https://mcp.theologai.xyz/mcp` | Production MCP Worker | Canonical production MCP endpoint |
 | `https://preview-mcp.theologai.xyz/mcp` | Preview MCP Worker | Preview-only MCP endpoint |
 
