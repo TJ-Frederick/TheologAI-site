@@ -52,6 +52,14 @@ export default function DonateModal({ onClose }) {
 
   const needsChainSwitch = isConnected && chainId !== selectedToken.chainId;
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   function selectPreset(value) {
     setSelectedPreset(value);
     setAmount(String(value));
@@ -130,10 +138,16 @@ export default function DonateModal({ onClose }) {
 
   return (
     <div className="donate-overlay" onClick={onClose}>
-      <div className="donate-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="donate-close" onClick={onClose}>×</button>
+      <div
+        className="donate-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="donate-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="donate-close" aria-label="Close donation dialog" onClick={onClose}>×</button>
 
-        <div style={{ fontFamily: 'var(--font-hero)', fontSize: 24, marginBottom: 4 }}>
+        <div id="donate-title" style={{ fontFamily: 'var(--font-hero)', fontSize: 24, marginBottom: 4 }}>
           Support TheologAI
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
