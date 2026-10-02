@@ -5,10 +5,18 @@ const DonationExperience = lazy(() => import("../components/DonationExperience")
 const REMOTE_ENDPOINT = "https://mcp.theologai.xyz/mcp";
 const FIRST_PROMPT = "Use TheologAI to trace the language and argument of John 1:1. Show which sources support each claim.";
 
-const HOSTED_CONFIG = `{
+const CURSOR_CONFIG = `{
   "mcpServers": {
     "theologai": {
-      "type": "url",
+      "url": "${REMOTE_ENDPOINT}"
+    }
+  }
+}`;
+
+const VSCODE_CONFIG = `{
+  "servers": {
+    "theologai": {
+      "type": "http",
       "url": "${REMOTE_ENDPOINT}"
     }
   }
@@ -31,10 +39,24 @@ const LOCAL_CONFIG = `{
 }`;
 
 const CLIENTS = [
-  { id: "claude", label: "Claude" },
-  { id: "claude-code", label: "Claude Code" },
-  { id: "codex", label: "Codex" },
+  { id: "claude", label: "Claude", docs: "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp", localDocs: "https://modelcontextprotocol.io/docs/develop/connect-local-servers" },
+  { id: "chatgpt", label: "ChatGPT", docs: "https://developers.openai.com/plugins/quickstart" },
+  { id: "gemini", label: "Gemini", docs: "https://support.google.com/gemini/answer/17209137?co=GENIE.Platform%3DDesktop&hl=en-GA" },
+  { id: "perplexity", label: "Perplexity", docs: "https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors" },
+  { id: "claude-code", label: "Claude Code", docs: "https://code.claude.com/docs/en/mcp" },
+  { id: "codex", label: "Codex", docs: "https://learn.chatgpt.com/docs/extend/mcp" },
+  { id: "cursor", label: "Cursor", docs: "https://prod.cursor.com/help/customization/mcp" },
+  { id: "vscode", label: "VS Code / Copilot", docs: "https://code.visualstudio.com/docs/agent-customization/mcp-servers" },
+  { id: "gemini-cli", label: "Gemini CLI", docs: "https://geminicli.com/docs/tools/mcp-server/" },
   { id: "other", label: "Other clients" },
+];
+
+const CLIENT_GROUPS = [
+  { id: "claude", label: "Claude", clients: ["claude", "claude-code"] },
+  { id: "chatgpt", label: "ChatGPT", clients: ["chatgpt", "codex"] },
+  { id: "gemini", label: "Gemini", clients: ["gemini", "gemini-cli"] },
+  { id: "perplexity", label: "Perplexity", clients: ["perplexity"] },
+  { id: "more", label: "More clients", clients: ["other", "cursor", "vscode"] },
 ];
 
 const WORKFLOWS = [
@@ -228,7 +250,39 @@ function HostedInstructions({ client, copiedKey, onCopy }) {
           <li><span>3</span><p>Name it “TheologAI,” paste the endpoint, and add it.</p></li>
           <li><span>4</span><p>Enable TheologAI from <strong>+ → Connectors</strong> in a conversation.</p></li>
         </ol>
-        <p className="install-footnote">Works across Claude web, Desktop, Cowork, and mobile. Team and Enterprise connectors may require an owner.</p>
+        <p className="install-footnote">Available on Free, Pro, Max, Team, and Enterprise; Free allows one custom connector. Connectors work across web, Desktop, Cowork, and mobile. Team and Enterprise owners must first add it in <strong>Organization settings → Connectors → Add → Custom → Web</strong>; members then connect it in Customize.</p>
+      </div>
+    );
+  }
+
+  if (client === "chatgpt") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">ChatGPT supports hosted MCP servers through a custom plugin. Set it up on the web:</p>
+        <EndpointBlock copiedKey={copiedKey} onCopy={onCopy} />
+        <ol className="install-steps">
+          <li><span>1</span><p>Open <strong>Settings → Security and login</strong> and turn on <strong>Developer mode</strong>.</p></li>
+          <li><span>2</span><p>Go to <strong>Plugins → +</strong>, name it “TheologAI,” and paste the endpoint. Choose <strong>No authentication</strong> if asked, then create it.</p></li>
+          <li><span>3</span><p>Open the new plugin in your personal Plugins and select <strong>+</strong> to install it.</p></li>
+          <li><span>4</span><p>Start a <strong>Work</strong> chat, type <strong>@</strong>, and select TheologAI before sending your prompt.</p></li>
+        </ol>
+        <p className="install-footnote">Developer mode depends on your account and workspace policy. If it is unavailable, ask your workspace admin or use another supported client. TheologAI does not require an account or API key.</p>
+      </div>
+    );
+  }
+
+  if (client === "gemini") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">Add TheologAI as a custom connected app at <strong>gemini.google.com</strong>:</p>
+        <EndpointBlock copiedKey={copiedKey} onCopy={onCopy} />
+        <ol className="install-steps">
+          <li><span>1</span><p>Open <strong>Settings → Connected Apps</strong> (or <strong>Personal Intelligence → Connected Apps</strong>).</p></li>
+          <li><span>2</span><p>Under <strong>Custom apps</strong>, select <strong>Add a custom app</strong> and paste the endpoint.</p></li>
+          <li><span>3</span><p>Select <strong>Next</strong> and complete the on-screen setup.</p></li>
+          <li><span>4</span><p>In a chat, type <strong>@</strong> and select TheologAI.</p></li>
+        </ol>
+        <p className="install-footnote">Currently requires a personal Google Account, age 18+, US location, English, and Keep Activity enabled. Work and school accounts are excluded. Add it on the web, then use it on web or mobile. Choose Gemini CLI above for its separate setup.</p>
       </div>
     );
   }
@@ -238,13 +292,29 @@ function HostedInstructions({ client, copiedKey, onCopy }) {
       <div className="install-detail">
         <p className="install-intro">Add the hosted server with one command:</p>
         <CodeBlock copyKey="codex-hosted" copiedKey={copiedKey} onCopy={onCopy} compact>
-          codex mcp add theologai --url {REMOTE_ENDPOINT}
+          {`codex mcp add theologai --url ${REMOTE_ENDPOINT}`}
         </CodeBlock>
         <ol className="install-steps install-steps-short">
           <li><span>1</span><p>Or open <strong>Settings → MCP servers → Add server</strong>.</p></li>
           <li><span>2</span><p>Choose <strong>Streamable HTTP</strong>, enter the endpoint, then restart.</p></li>
         </ol>
-        <p className="install-footnote">The Codex app, CLI, and IDE extension share the same MCP configuration.</p>
+        <p className="install-footnote">Run <strong>codex mcp list</strong> to check the configuration. Local Codex clients and the ChatGPT desktop app share MCP configuration on the same host.</p>
+      </div>
+    );
+  }
+
+  if (client === "perplexity") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">Add a custom remote connector in Perplexity:</p>
+        <EndpointBlock copiedKey={copiedKey} onCopy={onCopy} />
+        <ol className="install-steps">
+          <li><span>1</span><p>Open <strong>Account settings → Connectors → + Custom connector</strong>.</p></li>
+          <li><span>2</span><p>Select <strong>Remote</strong>, name it “TheologAI,” and paste the endpoint.</p></li>
+          <li><span>3</span><p>Choose <strong>Authentication: None</strong> and <strong>Transport: Streamable HTTP</strong>.</p></li>
+          <li><span>4</span><p>Check the acknowledgement, select <strong>Add</strong>, then open the connector card to enable it.</p></li>
+        </ol>
+        <p className="install-footnote">Custom remote connectors are available on Pro, Max, and Enterprise. Enterprise admins control whether members can add connectors.</p>
       </div>
     );
   }
@@ -254,7 +324,7 @@ function HostedInstructions({ client, copiedKey, onCopy }) {
       <div className="install-detail">
         <p className="install-intro">Add the hosted server to Claude Code for every project:</p>
         <CodeBlock copyKey="claude-code-hosted" copiedKey={copiedKey} onCopy={onCopy} compact>
-          claude mcp add --transport http --scope user theologai {REMOTE_ENDPOINT}
+          {`claude mcp add --transport http --scope user theologai ${REMOTE_ENDPOINT}`}
         </CodeBlock>
         <ol className="install-steps install-steps-short">
           <li><span>1</span><p>Run the command in your terminal, then open Claude Code.</p></li>
@@ -265,18 +335,52 @@ function HostedInstructions({ client, copiedKey, onCopy }) {
     );
   }
 
+  if (client === "cursor") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">Merge this entry into <strong>~/.cursor/mcp.json</strong> for all projects, or <strong>.cursor/mcp.json</strong> for this project:</p>
+        <CodeBlock copyKey="cursor-hosted" copiedKey={copiedKey} onCopy={onCopy}>
+          {CURSOR_CONFIG}
+        </CodeBlock>
+        <p className="install-footnote">Save and restart Cursor. Enable TheologAI in <strong>Customize → MCPs</strong>, then use it in Agent chat.</p>
+      </div>
+    );
+  }
+
+  if (client === "vscode") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">Merge this entry into your project’s <strong>.vscode/mcp.json</strong>:</p>
+        <CodeBlock copyKey="vscode-hosted" copiedKey={copiedKey} onCopy={onCopy}>
+          {VSCODE_CONFIG}
+        </CodeBlock>
+        <p className="install-footnote">Run <strong>MCP: List Servers</strong> in the Command Palette to start TheologAI and confirm server trust. In Copilot Chat, select <strong>Agent</strong> and enable TheologAI in the tools picker. Your organization must allow MCP servers.</p>
+      </div>
+    );
+  }
+
+  if (client === "gemini-cli") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">Add the hosted server to Gemini CLI for all projects:</p>
+        <CodeBlock copyKey="gemini-cli-hosted" copiedKey={copiedKey} onCopy={onCopy} compact>
+          {`gemini mcp add --transport http --scope user theologai ${REMOTE_ENDPOINT}`}
+        </CodeBlock>
+        <p className="install-footnote">Restart Gemini CLI, then run <strong>/mcp list</strong> to check the connection and available tools.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="install-detail">
-      <p className="install-intro">Use the canonical Streamable HTTP endpoint in any compatible MCP client.</p>
-      <CodeBlock copyKey="hosted-json" copiedKey={copiedKey} onCopy={onCopy}>
-        {HOSTED_CONFIG}
-      </CodeBlock>
-      <p className="install-footnote">No authentication is required. The server is anonymous, stateless, and exposes read-only tools.</p>
+      <p className="install-intro">In your client’s MCP settings, add a remote server named “TheologAI” and choose <strong>Streamable HTTP</strong>:</p>
+      <EndpointBlock copiedKey={copiedKey} onCopy={onCopy} />
+      <p className="install-footnote">Choose no authentication. The server is anonymous, stateless, and exposes read-only tools. Configuration formats vary by client; use its documentation for the correct schema.</p>
     </div>
   );
 }
 
-function LocalInstructions({ client, copiedKey, onCopy }) {
+function LocalInstructions({ client, copiedKey, onCopy, setMode }) {
   const connection = useMemo(() => {
     if (client === "claude-code") {
       return {
@@ -292,12 +396,49 @@ function LocalInstructions({ client, copiedKey, onCopy }) {
         code: "codex mcp add theologai-local -- node /absolute/path/to/TheologAI/dist/index.js",
       };
     }
+    if (client === "gemini-cli") {
+      return {
+        label: "Then connect Gemini CLI over stdio",
+        key: "gemini-cli-local",
+        code: "gemini mcp add --transport stdio --scope user theologai-local node /absolute/path/to/TheologAI/dist/index.js",
+      };
+    }
+    if (client === "vscode") {
+      return {
+        label: "Then merge this into .vscode/mcp.json and start the server with MCP: List Servers",
+        key: "vscode-local",
+        code: JSON.stringify({ servers: { theologai: { type: "stdio", command: "node", args: ["/absolute/path/to/TheologAI/dist/index.js"] } } }, null, 2),
+      };
+    }
     return {
-      label: client === "claude" ? "Then add the local server to Claude Desktop" : "Then configure your client over stdio",
+      label: client === "claude"
+        ? "Then merge this into Claude Desktop’s claude_desktop_config.json (Settings → Developer → Edit Config) and restart Claude"
+        : client === "cursor"
+          ? "Then merge this into ~/.cursor/mcp.json and restart Cursor"
+          : "Then configure your client over stdio using its own configuration format",
       key: "local-json",
       code: LOCAL_CONFIG,
     };
   }, [client]);
+
+  if (client === "perplexity") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">This guide covers Perplexity’s remote connector. For a local installation, choose Claude or one of the clients under More clients.</p>
+        <button type="button" className="button button-secondary install-intro-spaced" onClick={() => setMode("hosted")}>View hosted setup →</button>
+      </div>
+    );
+  }
+
+  if (client === "chatgpt" || client === "gemini") {
+    return (
+      <div className="install-detail">
+        <p className="install-intro">{client === "chatgpt" ? "ChatGPT on the web" : "The Gemini web and mobile apps"} connects to a hosted server, rather than launching a local stdio process.</p>
+        <p className="install-footnote">{client === "chatgpt" ? "For local MCP in the ChatGPT desktop app, choose Codex above. A private server can also be connected through OpenAI’s Secure MCP Tunnel." : "To run TheologAI on your machine, choose Gemini CLI above and follow its local setup."}</p>
+        <button type="button" className="button button-secondary install-intro-spaced" onClick={() => setMode("hosted")}>View hosted setup →</button>
+      </div>
+    );
+  }
 
   return (
     <div className="install-detail">
@@ -332,6 +473,10 @@ function LocalInstructions({ client, copiedKey, onCopy }) {
 }
 
 function InstallPanel({ mode, setMode, client, setClient, copiedKey, onCopy }) {
+  const selectedClient = CLIENTS.find((item) => item.id === client);
+  const selectedGroup = CLIENT_GROUPS.find((group) => group.clients.includes(client));
+  const setupDocs = mode === "local" && selectedClient?.localDocs ? selectedClient.localDocs : selectedClient?.docs;
+
   return (
     <div className="install-panel" id="install">
       <div className="ornament-corner ornament-corner-top" aria-hidden="true" />
@@ -344,33 +489,59 @@ function InstallPanel({ mode, setMode, client, setClient, copiedKey, onCopy }) {
         <span className="free-badge">Free &amp; open source</span>
       </div>
 
-      <div className="mode-switch" role="tablist" aria-label="Installation mode">
-        <button type="button" role="tab" aria-selected={mode === "hosted"} className={mode === "hosted" ? "active" : ""} onClick={() => setMode("hosted")}>
+      <div className="mode-switch" role="group" aria-label="Installation mode">
+        <button type="button" aria-pressed={mode === "hosted"} className={mode === "hosted" ? "active" : ""} onClick={() => setMode("hosted")}>
           <span className="mode-icon">⌁</span><span><strong>Hosted MCP</strong><small>Fastest setup</small></span>
         </button>
-        <button type="button" role="tab" aria-selected={mode === "local"} className={mode === "local" ? "active" : ""} onClick={() => setMode("local")}>
+        <button type="button" aria-pressed={mode === "local"} className={mode === "local" ? "active" : ""} onClick={() => setMode("local")}>
           <span className="mode-icon">⌘</span><span><strong>Run locally</strong><small>Privacy &amp; control</small></span>
         </button>
       </div>
 
-      <div className="client-tabs" role="tablist" aria-label="MCP client">
-        {CLIENTS.map((item) => (
-          <button key={item.id} type="button" role="tab" aria-selected={client === item.id} className={client === item.id ? "active" : ""} onClick={() => setClient(item.id)}>
-            {item.label}
+      <div className="client-tabs" role="group" aria-label="AI client">
+        {CLIENT_GROUPS.map((group) => (
+          <button key={group.id} type="button" aria-pressed={selectedGroup.id === group.id} className={selectedGroup.id === group.id ? "active" : ""} onClick={() => setClient(selectedGroup.id === group.id ? client : group.clients[0])}>
+            {group.label}
           </button>
         ))}
       </div>
 
+      {selectedGroup.id === "more" ? (
+        <div className="client-options">
+          <label htmlFor="additional-client">Choose your client</label>
+          <select id="additional-client" value={client} onChange={(event) => setClient(event.target.value)}>
+            <option value="other">Other MCP client</option>
+            <option value="cursor">Cursor</option>
+            <option value="vscode">VS Code / Copilot</option>
+          </select>
+        </div>
+      ) : selectedGroup.clients.length > 1 ? (
+        <div className="client-variants" role="group" aria-label={`${selectedGroup.label} client options`}>
+          {selectedGroup.clients.map((id, index) => (
+            <button key={id} type="button" aria-pressed={client === id} className={client === id ? "active" : ""} onClick={() => setClient(id)}>
+              {index === 0 ? "Chat" : CLIENTS.find((item) => item.id === id).label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       {mode === "hosted" ? (
         <HostedInstructions client={client} copiedKey={copiedKey} onCopy={onCopy} />
       ) : (
-        <LocalInstructions client={client} copiedKey={copiedKey} onCopy={onCopy} />
+        <LocalInstructions client={client} copiedKey={copiedKey} onCopy={onCopy} setMode={setMode} />
       )}
+
+      <p className="install-footnote install-source">
+        {setupDocs && (
+          <a href={setupDocs} target="_blank" rel="noreferrer">Official setup guide ↗</a>
+        )}
+        <span>Checked <time dateTime="2026-09-29">September 29, 2026</time></span>
+      </p>
 
       <FirstPrompt copiedKey={copiedKey} onCopy={onCopy} />
 
       <div className="trust-row">
-        <span>◇ No account</span><span>◇ No API key</span><span>◇ Read-only tools</span>
+        <span>◇ No TheologAI account</span><span>◇ No TheologAI API key</span><span>◇ Read-only tools</span>
       </div>
     </div>
   );
@@ -430,7 +601,7 @@ export default function Home() {
               <div className="hero-kicker"><span className="status-dot" /> Open-source MCP server</div>
               <h1>Ground your AI in <em>Scripture</em> and primary sources.</h1>
               <p>
-                MCP lets your AI use external research tools directly inside the conversation. TheologAI gives Claude, Claude Code, Codex, and other MCP clients eleven read-only tools for Bible text, Greek and Hebrew, commentary, and historical theology.
+                MCP lets your AI use external research tools directly inside the conversation. TheologAI gives Claude, ChatGPT, Gemini, and other MCP clients eleven read-only tools for Bible text, Greek and Hebrew, commentary, and historical theology.
               </p>
               <div className="hero-actions">
                 <a className="button button-primary" href="#demo">See what it returns <span>→</span></a>
@@ -552,6 +723,7 @@ export default function Home() {
           <p>Open-source, AI-native Bible study infrastructure.</p>
           <div>
             <a href="#install">Install</a>
+            <a href="/llms.txt">Agent docs</a>
             <a href="https://github.com/TJ-Frederick/TheologAI" target="_blank" rel="noreferrer">GitHub</a>
             <button type="button" onClick={() => setShowDonate(true)}>Donate</button>
           </div>

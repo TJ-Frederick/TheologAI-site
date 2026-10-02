@@ -1,0 +1,18 @@
+# TheologAI
+
+> TheologAI is a free, open-source Model Context Protocol (MCP) server for Bible study and theological research: Scripture, Greek and Hebrew, commentary, and historical primary sources.
+
+Connect to https://mcp.theologai.xyz/mcp using Streamable HTTP. No TheologAI account, API key, OAuth, or payment is required. The website at https://theologai.xyz/ is documentation, not the MCP endpoint.
+
+An MCP-capable client can initialize a connection, discover current tools with tools/list, and call them with tools/call. All eleven advertised tools are read-only. Retrieve the live tool schemas before choosing arguments. Client account eligibility and permissions still apply.
+
+## Start here
+
+- [Connection guide](https://theologai.xyz/connect.md): Exact hosted endpoint, authentication, client setup, protocol discovery, and a first tool call.
+- [Site overview](https://theologai.xyz/index.md): Research capabilities, tool names, usage guidance, and project links in Markdown.
+- [Interactive installation guide](https://theologai.xyz/#install): Setup for Claude, ChatGPT, Gemini, Perplexity, and coding clients, with account restrictions and official documentation links.
+
+## Project
+
+- [Source and documentation](https://github.com/TJ-Frederick/TheologAI): Open-source implementation, local installation, source provenance, and content limitations.
+- [Project support](https://theologai.xyz/#support-title): Voluntary donations; all research tools remain free.

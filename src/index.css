@@ -494,7 +494,8 @@ a {
 .client-tabs {
   margin-top: 20px;
   display: flex;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 8px 18px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -524,6 +525,51 @@ a {
 
 .client-tabs button.active::after {
   background: var(--gold);
+}
+
+.client-variants {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.client-variants button {
+  padding: 6px 11px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.client-variants button.active {
+  background: var(--gold-glow);
+  border-color: var(--border-gold);
+  color: var(--gold-bright);
+}
+
+.client-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.client-options select {
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 30px 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-deep);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  color-scheme: dark;
 }
 
 .install-detail {
@@ -643,6 +689,17 @@ a {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.55;
+}
+
+.install-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.install-source a {
+  color: var(--gold-bright);
+  text-underline-offset: 3px;
 }
 
 .requirements {
@@ -1735,8 +1792,7 @@ a {
   }
 
   .client-tabs {
-    gap: 13px;
-    overflow-x: auto;
+    gap: 8px 13px;
   }
 
   .client-tabs button {
