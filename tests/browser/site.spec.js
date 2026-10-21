@@ -120,18 +120,19 @@ test('WalletConnect QR setup works under the CSP', async ({ page }) => {
   expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
 });
 
-test('native donation switches chain and transfers only the requested amount', async ({ page }) => {
+test('native donation accepts a leading decimal, switches chain and transfers the exact amount', async ({ page }) => {
   await installWallet(page);
   const dialog = await openDonation(page);
   await connectWallet(page, dialog);
   await dialog.getByRole('button', { name: 'Switch to Ethereum', exact: true }).click();
   await dialog.getByRole('button', { name: 'ETH', exact: true }).first().click();
-  await dialog.getByRole('spinbutton', { name: 'Custom amount' }).fill('0.0001');
-  await dialog.getByRole('button', { name: 'Send 0.0001 ETH', exact: true }).click();
+  await dialog.getByRole('spinbutton', { name: 'Custom amount' }).fill('.5');
+  await expect(dialog.getByRole('alert')).not.toBeVisible();
+  await dialog.getByRole('button', { name: 'Send .5 ETH', exact: true }).click();
   await expect(dialog.getByText('Payment confirmed. Thank you for your support!')).toBeVisible();
   const sent = await page.evaluate(() => window.__walletRequests.find((req) => req.method === 'eth_sendTransaction').params[0]);
   expect(sent.to.toLowerCase()).toBe(recipient.toLowerCase());
-  expect(BigInt(sent.value)).toBe(100_000_000_000_000n);
+  expect(BigInt(sent.value)).toBe(500_000_000_000_000_000n);
   expect(sent.data || '0x').toBe('0x');
 });
 
@@ -140,9 +141,15 @@ test('invalid precision, wallet rejection and verification errors never show fal
   const dialog = await openDonation(page);
   await dialog.getByRole('button', { name: 'USDC', exact: true }).nth(1).click();
   await connectWallet(page, dialog);
-  await dialog.getByRole('spinbutton', { name: 'Custom amount' }).fill('1.0000001');
-  await expect(dialog.getByRole('button', { name: 'Send 1.0000001 USDC', exact: true })).toBeDisabled();
-  await expect(dialog.getByRole('alert')).toContainText('at most 6 decimal places');
+  const amount = dialog.getByRole('spinbutton', { name: 'Custom amount' });
+  for (const invalid of ['1.0000001', '.0000001']) {
+    await amount.fill(invalid);
+    await expect(dialog.getByRole('button', { name: `Send ${invalid} USDC`, exact: true })).toBeDisabled();
+    await expect(dialog.getByRole('alert')).toContainText('at most 6 decimal places');
+  }
+  await amount.fill('.000001');
+  await expect(dialog.getByRole('button', { name: 'Send .000001 USDC', exact: true })).toBeEnabled();
+  await expect(dialog.getByRole('alert')).not.toBeVisible();
   await dialog.getByRole('button', { name: '$1', exact: true }).click();
   await page.evaluate(() => { window.__rejectTransaction = true; });
   await dialog.getByRole('button', { name: 'Send 1 USDC', exact: true }).click();
