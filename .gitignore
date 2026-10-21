@@ -3,3 +3,5 @@ dist
 .wrangler
 .env
 .env.local
+test-results
+playwright-report
