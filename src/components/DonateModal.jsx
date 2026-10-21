@@ -7,7 +7,7 @@ import {
   useSwitchChain,
   useSendTransaction,
 } from 'wagmi';
-import { parseUnits, parseEther } from 'viem';
+import { donationValue } from '../donation';
 import {
   RECIPIENT_ADDRESS,
   ERC20_ABI,
@@ -43,14 +43,18 @@ export default function DonateModal({ onClose }) {
 
   const txHash = selectedToken.type === 'native' ? nativeTxHash : erc20TxHash;
   const isSending = selectedToken.type === 'native' ? isNativeSending : isErc20Sending;
-  const sendError = selectedToken.type === 'native' ? nativeError : erc20Error;
 
   const {
     isLoading: isConfirming,
     isSuccess: isConfirmed,
-  } = useWaitForTransactionReceipt({ hash: txHash });
+    error: receiptError,
+  } = useWaitForTransactionReceipt({ hash: txHash, chainId: selectedToken.chainId });
 
   const needsChainSwitch = isConnected && chainId !== selectedToken.chainId;
+  const isBusy = isSending || isConfirming;
+  const value = donationValue(amount, selectedToken.decimals);
+  const cannotSend = isBusy || needsChainSwitch || value === null || Boolean(txHash);
+  const sendError = (selectedToken.type === 'native' ? nativeError : erc20Error) || receiptError;
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -84,19 +88,21 @@ export default function DonateModal({ onClose }) {
   }
 
   function sendDonation() {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
+    if (!isConnected || cannotSend) return;
 
     if (selectedToken.type === 'native') {
       sendTransaction({
+        chainId: selectedToken.chainId,
         to: RECIPIENT_ADDRESS,
-        value: parseEther(amount),
+        value,
       });
     } else {
       writeContract({
+        chainId: selectedToken.chainId,
         address: selectedToken.contract,
         abi: ERC20_ABI,
         functionName: 'transfer',
-        args: [RECIPIENT_ADDRESS, parseUnits(amount, selectedToken.decimals)],
+        args: [RECIPIENT_ADDRESS, value],
       });
     }
   }
@@ -109,14 +115,18 @@ export default function DonateModal({ onClose }) {
       return;
     }
     setVerifyStatus('verifying');
+    const controller = new AbortController();
+    let active = true;
     fetch('/api/verify-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ txHash }),
+      signal: controller.signal,
     })
       .then((r) => r.json())
-      .then((data) => setVerifyStatus(data.verified ? 'verified' : 'failed'))
-      .catch(() => setVerifyStatus('failed'));
+      .then((data) => { if (active) setVerifyStatus(data.verified ? 'verified' : 'failed'); })
+      .catch(() => { if (active) setVerifyStatus('failed'); });
+    return () => { active = false; controller.abort(); };
   }, [isConfirmed, txHash, selectedToken.id]);
 
   const amountLabel = selectedToken.type === 'native'
@@ -182,6 +192,7 @@ export default function DonateModal({ onClose }) {
                     <button
                       key={token.id}
                       style={pillStyle(selectedToken.id === token.id)}
+                      disabled={isBusy}
                       onClick={() => handleTokenChange(token)}
                     >
                       {token.symbol}
@@ -231,6 +242,7 @@ export default function DonateModal({ onClose }) {
                 {SUGGESTED_AMOUNTS.map((preset) => (
                   <button
                     key={preset}
+                    disabled={isBusy}
                     onClick={() => selectPreset(preset)}
                     style={{
                       padding: '8px',
@@ -251,9 +263,12 @@ export default function DonateModal({ onClose }) {
               </div>
               <input
                 type="number"
-                min="0.01"
-                step="0.01"
+                min={selectedToken.decimals === 18 ? '0.000000000000000001' : '0.000001'}
+                step="any"
                 placeholder="Custom amount"
+                aria-label="Custom amount"
+                aria-invalid={Boolean(amount && value === null)}
+                disabled={isBusy}
                 value={selectedPreset ? '' : amount}
                 onChange={handleCustomAmount}
                 style={{
@@ -268,26 +283,31 @@ export default function DonateModal({ onClose }) {
                   outline: 'none',
                 }}
               />
+              {amount && value === null && (
+                <p role="alert" style={{ marginTop: 8, fontSize: 12, color: '#facc15' }}>
+                  Enter a positive amount with at most {selectedToken.decimals} decimal places.
+                </p>
+              )}
             </div>
 
             <button
               onClick={sendDonation}
-              disabled={isSending || isConfirming || !amount || Number(amount) <= 0}
+              disabled={cannotSend}
               style={{
                 width: '100%',
                 padding: '12px',
-                background: (isSending || isConfirming || !amount || Number(amount) <= 0)
+                background: cannotSend
                   ? 'var(--border)'
                   : 'linear-gradient(135deg, var(--gold-dim), var(--gold))',
                 border: 'none',
                 borderRadius: 8,
-                color: (isSending || isConfirming || !amount || Number(amount) <= 0)
+                color: cannotSend
                   ? 'var(--muted)'
                   : 'var(--bg)',
                 fontFamily: 'var(--font-display)',
                 fontSize: 14,
                 fontWeight: 600,
-                cursor: (isSending || isConfirming || !amount || Number(amount) <= 0)
+                cursor: cannotSend
                   ? 'not-allowed'
                   : 'pointer',
                 transition: 'all 0.2s',
@@ -312,7 +332,7 @@ export default function DonateModal({ onClose }) {
             fontSize: 13,
             color: '#fca5a5',
           }}>
-            {sendError.shortMessage || sendError.message}
+            {sendError.shortMessage || sendError.message || 'Transaction could not be confirmed. Check the block explorer before trying again.'}
           </p>
         )}
 
@@ -362,8 +382,8 @@ export default function DonateModal({ onClose }) {
 
             {isConfirmed && verifyStatus === 'failed' && (
               <p style={{ marginTop: 8, fontSize: 13, color: '#facc15' }}>
-                Transaction confirmed on-chain but verification returned an error.
-                Your donation was still received — thank you!
+                Transaction confirmed on-chain, but we couldn't verify this donation.
+                Check the block explorer before trying again.
               </p>
             )}
           </div>

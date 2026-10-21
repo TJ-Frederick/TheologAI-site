@@ -30,6 +30,56 @@ npm run dev:full
 npm run build && npm run preview
 ```
 
+The site tooling requires Node.js 22 or later. `dev:full` builds the frontend and
+starts a local Pages runtime; use `npm run dev` for frontend hot reload.
+
+## Security verification
+
+```bash
+npm test
+npm run test:e2e
+npm audit
+```
+
+The browser suite uses an installed Google Chrome by default and starts its own
+local Pages server on port 8788. It checks desktop and mobile layouts, client
+guides, static documentation, security headers, and the donation UI. Wallets,
+blockchain RPC responses, and UI verification responses are simulated; the API's
+receipt validation is tested separately with encoded USDC transfer logs. Tests
+do not sign or broadcast real transactions. To use Playwright's bundled Chromium,
+install it with `npx playwright install chromium` and run
+`PLAYWRIGHT_CHANNEL=chromium npm run test:e2e`.
+
+`public/_headers` supplies the static site's CSP, framing protection, HSTS,
+content-type protection, and referrer policy. The API middleware applies headers
+to Function responses separately. The CSP allows inline styles required by React
+and RainbowKit, HTTPS/WebSocket connections to wallet and RPC services, and the
+wallet providers' frames. Scripts remain restricted to the site itself. HSTS
+applies to the responding hostname without including other subdomains or preload.
+
+The verifier accepts JSON bodies up to 1 KB, validates the complete transaction
+hash, rejects cross-site browser requests, and makes at most one RPC attempt with
+an eight-second timeout. Only successful, positive Base USDC transfer logs to the
+configured recipient count as verified. A receipt is evidence of inclusion in a
+block, not a guarantee of transaction finality or proof of the caller's identity.
+
+The package overrides update WalletConnect within its 2.x API and the UUID
+dependency used by MetaMask's SDKs. RainbowKit currently requires Wagmi 2; these
+overrides address its pinned transitive dependencies without forcing Wagmi 3.
+The scoped Cuer update fixes RainbowKit's QR renderer compatibility with `qr`
+0.6 and later. Recheck the overrides when updating the wallet libraries. Tailwind uses the v4
+PostCSS plugin and targets modern browsers (Safari 16.4+, Chrome 111+, Firefox 128+).
+
+Before deployment, review Cloudflare edge rate limiting for `POST
+/api/verify-payment`. An example rule expression is
+`http.request.method eq "POST" and http.request.uri.path eq "/api/verify-payment"`,
+with a per-IP threshold appropriate to donation traffic. Check protection for
+both the custom domain and the `pages.dev` alias: a WAF rule on the custom domain
+does not cover the alias. Pages does not support Wrangler's `ratelimits` binding,
+so that configuration belongs at the edge or in a separately bound service.
+Local tests cannot verify account-level rules, and no live Cloudflare rules are
+changed by these checks.
+
 ## Client setup instructions
 
 The installation panel in `src/pages/theologai-homepage.jsx` includes hosted setup
