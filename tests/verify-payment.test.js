@@ -93,6 +93,19 @@ test('verifies a successful Base USDC transfer and preserves exact amounts', asy
   assert.equal(rpcCalls, 1);
 });
 
+test('uses the configured Base RPC endpoint for receipt lookups', async () => {
+  const mockFetch = globalThis.fetch;
+  let requestedUrl;
+  globalThis.fetch = async (url, init) => {
+    requestedUrl = url;
+    return mockFetch(url, init);
+  };
+  const response = await onRequest({ request: request(), env: { BASE_RPC_URL: 'https://base-rpc.example' } });
+  assert.equal(response.status, 200);
+  assert.equal(new URL(requestedUrl).origin, 'https://base-rpc.example');
+  assert.equal(rpcCalls, 1);
+});
+
 for (const [label, logs] of [
   ['wrong token', [transfer(5_000_000n, recipient, sender)]],
   ['wrong recipient', [transfer(5_000_000n, sender)]],
@@ -115,12 +128,14 @@ test('does not verify a reverted transaction or missing receipt', async () => {
 });
 
 test('RPC failures have a controlled response and do not retry', async (t) => {
-  t.mock.method(console, 'error', () => {});
+  const log = t.mock.method(console, 'error', () => {});
   globalThis.fetch = async () => { rpcCalls++; throw new Error('private upstream detail'); };
   const response = await onRequest({ request: request() });
   assert.equal(response.status, 502);
   assert.equal(rpcCalls, 1);
   assert.doesNotMatch(await response.text(), /private upstream detail|Version:|mainnet\.base/);
+  assert.equal(log.mock.calls.length, 1);
+  assert.doesNotMatch(log.mock.calls[0].arguments[0], /private upstream detail|0x[a-f0-9]{64}|https:/i);
 });
 
 test('API middleware secures successful and failed responses without changing their body/status', async () => {
