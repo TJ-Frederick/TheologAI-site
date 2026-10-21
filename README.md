@@ -54,12 +54,16 @@ install it with `npx playwright install chromium` and run
 content-type protection, and referrer policy. The API middleware applies headers
 to Function responses separately. The CSP allows inline styles required by React
 and RainbowKit, HTTPS/WebSocket connections to wallet and RPC services, and the
-wallet providers' frames. Scripts remain restricted to the site itself. HSTS
+wallet providers' frames. Scripts are restricted to the site and Cloudflare's
+Web Analytics beacon host, which Cloudflare injects in production. HSTS
 applies to the responding hostname without including other subdomains or preload.
 
 The verifier accepts JSON bodies up to 1 KB, validates the complete transaction
 hash, rejects cross-site browser requests, and makes at most one RPC attempt with
-an eight-second timeout. Only successful, positive Base USDC transfer logs to the
+an eight-second timeout. Receipt lookups use dRPC's public Base endpoint; Base's
+default public endpoint rate-limits requests from the deployed Pages runtime.
+Upstream failures log only the error type, HTTP status, and cause type, without
+request bodies or provider error messages. Only successful, positive Base USDC transfer logs to the
 configured recipient count as verified. A receipt is evidence of inclusion in a
 block, not a guarantee of transaction finality or proof of the caller's identity.
 

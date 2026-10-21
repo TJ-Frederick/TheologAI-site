@@ -115,12 +115,14 @@ test('does not verify a reverted transaction or missing receipt', async () => {
 });
 
 test('RPC failures have a controlled response and do not retry', async (t) => {
-  t.mock.method(console, 'error', () => {});
+  const log = t.mock.method(console, 'error', () => {});
   globalThis.fetch = async () => { rpcCalls++; throw new Error('private upstream detail'); };
   const response = await onRequest({ request: request() });
   assert.equal(response.status, 502);
   assert.equal(rpcCalls, 1);
   assert.doesNotMatch(await response.text(), /private upstream detail|Version:|mainnet\.base/);
+  assert.equal(log.mock.calls.length, 1);
+  assert.doesNotMatch(log.mock.calls[0].arguments[0], /private upstream detail|0x[a-f0-9]{64}|https:/i);
 });
 
 test('API middleware secures successful and failed responses without changing their body/status', async () => {

@@ -111,6 +111,21 @@ test('CSP prevents execution of an injected inline script', async ({ page }) => 
   await expect.poll(() => page.evaluate(() => window.__cspViolations.length)).toBeGreaterThan(0);
 });
 
+test('CSP permits the Cloudflare analytics beacon injected in production', async ({ page }) => {
+  await installWallet(page);
+  await page.route('https://static.cloudflareinsights.com/**', (route) => route.fulfill({
+    contentType: 'application/javascript', body: 'window.__analyticsLoaded = true;',
+  }));
+  await page.goto('/');
+  await page.evaluate(() => {
+    const script = document.createElement('script');
+    script.src = 'https://static.cloudflareinsights.com/beacon.min.js/test-version';
+    document.head.appendChild(script);
+  });
+  await expect.poll(() => page.evaluate(() => window.__analyticsLoaded)).toBe(true);
+  expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
+});
+
 test('WalletConnect QR setup works under the CSP', async ({ page }) => {
   await installWallet(page);
   const dialog = await openDonation(page);
