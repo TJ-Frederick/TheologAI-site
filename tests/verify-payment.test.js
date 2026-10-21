@@ -93,6 +93,19 @@ test('verifies a successful Base USDC transfer and preserves exact amounts', asy
   assert.equal(rpcCalls, 1);
 });
 
+test('uses the configured Base RPC endpoint for receipt lookups', async () => {
+  const mockFetch = globalThis.fetch;
+  let requestedUrl;
+  globalThis.fetch = async (url, init) => {
+    requestedUrl = url;
+    return mockFetch(url, init);
+  };
+  const response = await onRequest({ request: request(), env: { BASE_RPC_URL: 'https://base-rpc.example' } });
+  assert.equal(response.status, 200);
+  assert.equal(new URL(requestedUrl).origin, 'https://base-rpc.example');
+  assert.equal(rpcCalls, 1);
+});
+
 for (const [label, logs] of [
   ['wrong token', [transfer(5_000_000n, recipient, sender)]],
   ['wrong recipient', [transfer(5_000_000n, sender)]],

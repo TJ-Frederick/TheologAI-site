@@ -17,11 +17,6 @@ const TRANSFER_EVENT_ABI = [
   },
 ];
 
-const client = createPublicClient({
-  chain: base,
-  transport: http('https://base.drpc.org', { timeout: 8000, retryCount: 0 }),
-});
-
 function failure(error, status, headers) {
   return Response.json({ verified: false, error }, { status, headers });
 }
@@ -76,6 +71,13 @@ export async function onRequest(context) {
   }
 
   try {
+    const client = createPublicClient({
+      chain: base,
+      transport: http(context.env?.BASE_RPC_URL || 'https://mainnet.base.org', {
+        timeout: 8000,
+        retryCount: 0,
+      }),
+    });
     const receipt = await client.getTransactionReceipt({ hash: txHash });
 
     if (receipt.status !== 'success') {
@@ -130,6 +132,7 @@ export async function onRequest(context) {
       event: 'donation_verification_failed',
       error: err?.name || 'UnknownError',
       status: typeof err?.status === 'number' ? err.status : null,
+      code: typeof err?.code === 'number' ? err.code : null,
       cause: err?.cause?.name || null,
     }));
     return failure('Verification is temporarily unavailable. Check your transaction in the block explorer.', 502);
